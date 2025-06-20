@@ -1,4 +1,3 @@
-// src/pages/HomePage.jsx
 import React from 'react'
 import { Link } from 'react-router-dom'
 import './HomePage.css'
@@ -16,6 +15,9 @@ export default function HomePage() {
         <Link to="/users">👤 View Users</Link>
         <Link to="/departments">🏫 Browse Departments</Link>
         <Link to="/questions">❓ Explore Questions</Link>
+
+        {/* Link to the admin dashboard */}
+        <Link to="/dashboard">📊 Admin Dashboard</Link>
       </div>
 
       <footer>
