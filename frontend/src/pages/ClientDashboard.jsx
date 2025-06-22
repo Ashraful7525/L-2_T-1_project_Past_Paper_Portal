@@ -19,14 +19,15 @@ export default function ClientDashboard() {
 
   // Fetch departments on load
   useEffect(() => {
-    fetch('/api/departments')
+    fetch('http://localhost:4000/api/departments')
       .then((res) => res.json())
       .then((data) => {
-        if (Array.isArray(data)) {
-          setDepartments(data);
-        } else {
-          setError('Error: Departments data is not in the expected format.');
-        }
+        //console.log(data)
+        // if (Array.isArray(data)) {
+        setDepartments(data);
+        // } else {
+        //   setError('Error: Departments data is not in the expected format.');
+        // }
       })
       .catch((error) => setError(`Error fetching departments: ${error.message}`));
   }, []);
@@ -34,7 +35,7 @@ export default function ClientDashboard() {
   // Fetch courses based on selected department
   useEffect(() => {
     if (search.department) {
-      fetch(`/api/courses?department_id=${search.department}`)
+      fetch(`http://localhost:4000/api/courses?department_id=${search.department}`)
         .then((res) => res.json())
         .then((data) => setCourses(data))
         .catch((error) => setError(`Error fetching courses: ${error.message}`));

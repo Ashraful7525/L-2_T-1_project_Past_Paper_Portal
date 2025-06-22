@@ -1,152 +1,151 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import cors from 'cors';
-import { supabase } from '../config/supabase.js';
+import pkg from 'pg';
 
 dotenv.config();
 
-const app = express();
-const PORT = process.env.PORT || 4000;
+const { Pool } = pkg;
 
-app.use(cors());
+const app = express();
+const PORT = 4000;
+
+const pool = new Pool({
+  connectionString: process.env.SUPABASE_CONNECTION_STRING,
+  ssl: { rejectUnauthorized: false },
+});
+app.use(cors({
+  origin: 'http://localhost:3000', // or your frontend URL
+  credentials: true
+}));
 app.use(express.json());
 
 // Health check route
 app.get('/api/health', async (req, res) => {
   try {
-    await supabase.from('users').select('student_id').limit(1);
+    const result = await pool.query('SELECT student_id FROM users LIMIT 1');
     res.json({ status: 'ok' });
   } catch (err) {
     res.status(500).json({ status: 'error', message: err.message });
   }
 });
 
-// ✅ Get all users
+// Get all users
 app.get('/api/users', async (req, res) => {
-  const { data, error } = await supabase
-    .from('users')
-    .select('*')
-    .order('student_id', { ascending: true });
-
-  if (error) {
-    return res.status(500).json({ success: false, error: error.message });
+  try {
+    const result = await pool.query('SELECT * FROM users ORDER BY student_id ASC');
+    res.json({ success: true, data: result.rows });
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
   }
-
-  res.json({ success: true, data });
 });
 
-// ✅ Get all levels
+// Get all levels
 app.get('/api/levels', async (req, res) => {
-  const { data, error } = await supabase.from('levels').select('*');
-  if (error) {
-    return res.status(500).json({ error: error.message });
+  try {
+    const result = await pool.query('SELECT * FROM levels');
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
-
-  console.log("Levels Data:", data); // Log the levels data to the console for debugging
-
-  res.json(data);  // Ensure this is an array of objects
 });
 
-// ✅ Get all terms
+// Get all terms
 app.get('/api/terms', async (req, res) => {
-  const { data, error } = await supabase.from('terms').select('*');
-  if (error) {
-    return res.status(500).json({ error: error.message });
+  try {
+    const result = await pool.query('SELECT * FROM terms');
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
-
-  console.log("Terms Data:", data); // Log the terms data to the console for debugging
-
-  res.json(data);  // Ensure this is an array of objects
 });
 
-
-// ✅ Get all departments
+// Get all departments
 app.get('/api/departments', async (req, res) => {
-  const { data, error } = await supabase.from('departments').select('*');
-  if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
+  try {
+    const result = await pool.query('SELECT * FROM departments');
+    console.log(result)
+    res.json(result.rows);
+  } catch (error) {
+    console.log("jygsh")
+    res.status(500).json({ error: error.message });
+  }
 });
 
-// ✅ Get courses (optionally filter by department_id)
+// Get courses, optionally filter by department_id
 app.get('/api/courses', async (req, res) => {
   const { department_id } = req.query;
+  try {
+    let query = 'SELECT * FROM courses';
+    let params = [];
 
-  let query = supabase.from('courses').select('*');
-  if (department_id) {
-    query = query.eq('department_id', department_id);
+    if (department_id) {
+      query += ' WHERE department_id = $1';
+      params.push(department_id);
+    }
+
+    const result = await pool.query(query, params);
+    res.json(result.rows);
+  } catch (error) {
+    res.status(500).json({ error: error.message });
   }
-
-  const { data, error } = await query;
-  if (error) return res.status(500).json({ error: error.message });
-  res.json(data);
 });
 
+// Search questions with filters
+// Search questions with filters
 // Search questions with filters
 app.get('/api/questions/search', async (req, res) => {
   const { level, term, department, course, year, questionNo } = req.query;
 
-  let semesterIds = [];
-
-  // Retrieve semester_id based on level and term
-  if (level && term) {
-    // If both level and term are provided, filter by both
-    const { data: semesters, error: semError } = await supabase
-      .from('semesters')
-      .select('semester_id')
-      .eq('level', level)  // WHERE level = level
-      .eq('term', term);   // AND term = term
-
-    if (semError) {
-      return res.status(500).json({ error: semError.message });
+  try {
+    // 1. Get semester_ids based on level and term
+    let semesterQuery = 'SELECT semester_id FROM semesters WHERE 1=1';
+    const semesterParams = [];
+    
+    if (level) {
+      semesterParams.push(parseInt(level)); // Convert to integer
+      semesterQuery += ` AND level = $${semesterParams.length}`;
+    }
+    if (term) {
+      semesterParams.push(parseInt(term)); // Convert to integer
+      semesterQuery += ` AND term = $${semesterParams.length}`;
     }
 
-    semesterIds = semesters?.map(s => s.semester_id) || [];
-  } else if (level) {
-    // If only level is provided, filter by level
-    const { data: semesters, error: semError } = await supabase
-      .from('semesters')
-      .select('semester_id')
-      .eq('level', level); // WHERE level = level
+    const semesterResult = await pool.query(semesterQuery, semesterParams);
+    const semesterIds = semesterResult.rows.map(row => row.semester_id);
 
-    if (semError) {
-      return res.status(500).json({ error: semError.message });
+    // 2. Build questions query
+    let questionsQuery = 'SELECT * FROM questions WHERE 1=1';
+    const questionsParams = [];
+    
+    if (semesterIds.length > 0) {
+      questionsQuery += ` AND semester_id = ANY($${questionsParams.length + 1}::integer[])`; // Changed to integer[]
+      questionsParams.push(semesterIds);
+    } else if (level || term) {
+      // If level/term filters were applied but no semesters found, return empty result
+      return res.json([]);
     }
 
-    semesterIds = semesters?.map(s => s.semester_id) || [];
-  } else if (term) {
-    // If only term is provided, filter by term
-    const { data: semesters, error: semError } = await supabase
-      .from('semesters')
-      .select('semester_id')
-      .eq('term', term); // WHERE term = term
-
-    if (semError) {
-      return res.status(500).json({ error: semError.message });
+    if (course) {
+      questionsParams.push(parseInt(course)); // Convert to integer
+      questionsQuery += ` AND course_id = $${questionsParams.length}`;
+    }
+    if (year) {
+      questionsParams.push(parseInt(year)); // Convert to integer
+      questionsQuery += ` AND year = $${questionsParams.length}`;
+    }
+    if (questionNo) {
+      questionsParams.push(parseInt(questionNo)); // Convert to integer
+      questionsQuery += ` AND question_no = $${questionsParams.length}`;
     }
 
-    semesterIds = semesters?.map(s => s.semester_id) || [];
+    const questionsResult = await pool.query(questionsQuery, questionsParams);
+    res.json(questionsResult.rows);
+  } catch (error) {
+    console.error('Database error:', error);
+    res.status(500).json({ error: error.message });
   }
-
-  // Build query for questions with optional filters
-  let query = supabase.from('questions').select('*');
-
-  // Apply semester_id filter
-  if (semesterIds.length > 0) query = query.in('semester_id', semesterIds);
-
-  if (course) query = query.eq('course_id', course); // Filter by course_id
-  if (year) query = query.eq('year', year); // Filter by year
-  if (questionNo) query = query.eq('question_no', questionNo); // Filter by question number
-
-  // Return search results
-  const { data, error } = await query;
-
-  if (error) return res.status(500).json({ error: error.message });
-
-  res.json(data);  // Return the filtered data
 });
-
-
-// Start the server
 app.listen(PORT, () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
 });

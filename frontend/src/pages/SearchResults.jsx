@@ -13,7 +13,8 @@ export default function SearchResults() {
       const params = query.toString();
 
       try {
-        const response = await fetch(`/api/questions/search?${params}`);
+        const response = await fetch(`http://localhost:4000/api/questions/search?${params}`);
+        console.log(response)
         if (!response.ok) {
           throw new Error('Failed to fetch search results');
         }
