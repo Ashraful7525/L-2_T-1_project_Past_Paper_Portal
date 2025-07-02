@@ -9,18 +9,18 @@ export const getAllDepartments = async (req, res) => {
   }
 };
 
-export const getAllLevels = async (req, res) => {
+export const getAllTerms = async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM levels');
+    const result = await pool.query('SELECT DISTINCT term FROM semesters ORDER BY term');
     res.json(result.rows);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
 };
 
-export const getAllTerms = async (req, res) => {
+export const getAllLevels = async (req, res) => {
   try {
-    const result = await pool.query('SELECT * FROM terms');
+    const result = await pool.query('SELECT DISTINCT level FROM semesters ORDER BY level');
     res.json(result.rows);
   } catch (error) {
     res.status(500).json({ error: error.message });

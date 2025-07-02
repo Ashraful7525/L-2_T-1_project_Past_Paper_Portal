@@ -1,22 +1,23 @@
-// src/App.jsx
-import { BrowserRouter, Routes, Route, Link } from 'react-router-dom';
-import HomePage    from './pages/HomePage';
-import UsersPage   from './pages/UsersPage';
-import ClientDashboard from './pages/ClientDashboard';
-import SearchResults from './pages/SearchResults';
+import React from "react";
+import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import HomePage from "./pages/HomePage";
+import QuestionsPage from "./pages/QuestionsPage";
+import AddQuestionPage from "./pages/AddQuestionPage";
+import AddSolutionPage from "./pages/AddSolutionPage";
+import UserPage from "./pages/UserPage";
 
-export default function App() {
+function App() {
   return (
-    <BrowserRouter>
-      <nav style={{ padding: '1rem' }}>
-        <Link to="/">Home</Link> | <Link to="/users">Users</Link>
-      </nav>
+    <Router>
       <Routes>
         <Route path="/" element={<HomePage />} />
-        <Route path="/users" element={<UsersPage />} />
-        <Route path="/dashboard" element={<ClientDashboard />} />
-        <Route path="/search-results" element={<SearchResults />} />
+        <Route path="/questions" element={<QuestionsPage />} />
+        <Route path="/questions/add" element={<AddQuestionPage />} />
+        <Route path="/solutions/add" element={<AddSolutionPage />} />
+        <Route path="/users" element={<UserPage />} />
       </Routes>
-    </BrowserRouter>
+    </Router>
   );
 }
+
+export default App;

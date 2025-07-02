@@ -7,6 +7,8 @@ import questionRoutes from './questionRoutes.js';
 import solutionRoutes from './solutionRoutes.js';
 import commentRoutes from './commentRoutes.js';
 import voteRoutes from './voteRoutes.js';
+import levelsRoutes from './levelsRoutes.js';
+import termsRoutes from './termsRoutes.js';
 
 const router = express.Router();
 
@@ -18,5 +20,7 @@ router.use('/questions', questionRoutes);
 router.use('/solutions', solutionRoutes);
 router.use('/comments', commentRoutes);
 router.use('/votes', voteRoutes);
+router.use('/levels', levelsRoutes);
+router.use('/terms', termsRoutes);
 
 export default router;
