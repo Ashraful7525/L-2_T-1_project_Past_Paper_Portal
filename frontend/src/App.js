@@ -8,9 +8,9 @@ import SearchResults from './pages/SearchResults';
 export default function App() {
   return (
     <BrowserRouter>
-      <nav style={{ padding: '1rem' }}>
+      {/* <nav style={{ padding: '1rem' }}>
         <Link to="/">Home</Link> | <Link to="/users">Users</Link>
-      </nav>
+      </nav> */}
       <Routes>
         <Route path="/" element={<HomePage />} />
         <Route path="/users" element={<UsersPage />} />

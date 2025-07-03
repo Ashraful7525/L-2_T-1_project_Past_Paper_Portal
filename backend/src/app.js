@@ -67,10 +67,32 @@ app.get('/api/departments', async (req, res) => {
     console.log(result)
     res.json(result.rows);
   } catch (error) {
-    console.log("jygsh")
+    //console.log("jygsh")
     res.status(500).json({ error: error.message });
   }
 });
+
+// GET /api/departments ─ returns department name + post count (most-active first)
+app.get('/api/departments/popular', async (req, res) => {
+  try {
+    const result = await pool.query(`
+      SELECT
+        ('p/' || REGEXP_REPLACE(REPLACE(d.department_name, ' ', ''), 'engineering', 'Eng', 'gi')) AS name,
+        COUNT(q.question_id)::INT AS posts,
+        d.icon AS icon
+      FROM departments d
+      LEFT JOIN courses c ON d.department_id = c.department_id
+      LEFT JOIN questions q ON c.course_id = q.course_id
+      GROUP BY d.department_name, d.icon
+      ORDER BY posts DESC;
+    `);
+
+    res.json(result.rows);              // ➜ [{ name: "CSE", posts: 45200 }, …]
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 
 // Get courses, optionally filter by department_id
 app.get('/api/courses', async (req, res) => {
