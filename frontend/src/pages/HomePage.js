@@ -1,20 +1,28 @@
-import React from "react";
-import { Link } from "react-router-dom";
+import { Box } from "@mui/material";
+import { useState } from "react";
+import Sidebar from "../components/Sidebar";
+import QuestionFilterBar from "../components/QuestionFilterBar";
+import PostList from "../components/PostList";
 
-function HomePage() {
+export default function HomePage() {
+  const [filters, setFilters] = useState({
+    department: "",
+    course: "",
+    level: "",
+    term: "",
+    year: "",
+    questionNo: ""
+  });
+
   return (
-    <div>
-      <h1>Past Paper Portal</h1>
-      <nav>
-        <ul>
-          <li><Link to="/questions">Browse Questions</Link></li>
-          <li><Link to="/questions/add">Add Question</Link></li>
-          <li><Link to="/solutions/add">Add Solution</Link></li>
-          <li><Link to="/users">View Users</Link></li>
-        </ul>
-      </nav>
-    </div>
+    <Box sx={{ display: "flex", bgcolor: "#dae0e6", minHeight: "100vh" }}>
+      <div className="sidebar">
+        <Sidebar />
+      </div>
+      <div className="container" style={{ marginLeft: 270 }}>
+        <QuestionFilterBar filters={filters} setFilters={setFilters} />
+        <PostList filters={filters} />
+      </div>
+    </Box>
   );
 }
-
-export default HomePage;

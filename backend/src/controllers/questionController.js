@@ -1,5 +1,32 @@
 import pool from '../config/database.js';
 
+// GET /api/questions
+export const getAllQuestions = async (req, res) => {
+  try {
+    const result = await pool.query('SELECT * FROM questions ORDER BY question_id ASC');
+    res.json(result.rows);
+  } catch (error) {
+    console.error('Error fetching questions:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// GET /api/questions/:id
+export const getQuestionById = async (req, res) => {
+  const { id } = req.params;
+  try {
+    const result = await pool.query('SELECT * FROM questions WHERE question_id = $1', [parseInt(id)]);
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Question not found' });
+    }
+    res.json(result.rows[0]);
+  } catch (error) {
+    console.error('Error fetching question:', error);
+    res.status(500).json({ error: error.message });
+  }
+};
+
+// GET /api/questions/search
 export const searchQuestions = async (req, res) => {
   const { level, term, department, course, year, questionNo } = req.query;
 
@@ -52,6 +79,7 @@ export const searchQuestions = async (req, res) => {
   }
 };
 
+// POST /api/questions
 export const createQuestion = async (req, res) => {
   const { question_no, question_text, course_id, level, term, year } = req.body;
   
@@ -110,6 +138,7 @@ export const createQuestion = async (req, res) => {
   }
 };
 
+// POST /api/questions/bulk
 export const bulkCreateQuestions = async (req, res) => {
   const { questions } = req.body;
   

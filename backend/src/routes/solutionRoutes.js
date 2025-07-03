@@ -1,8 +1,9 @@
 import express from 'express';
-import { createSolution } from '../controllers/solutionController.js';
+import { createSolution, getSolutionsByQuestionId } from '../controllers/solutionController.js';
 
 const router = express.Router();
 
 router.post('/', createSolution);
+router.get('/', getSolutionsByQuestionId);
 
 export default router;
